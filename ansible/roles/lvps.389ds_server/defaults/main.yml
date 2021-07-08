@@ -1,0 +1,106 @@
+---
+
+# Instance settings
+
+dirsrv_product: '{% if ansible_facts["distribution_major_version"] | int < 8 %}389-ds-base{% else %}@389-directory-server:stable/minimal{% endif %}'
+dirsrv_suffix: dc=example,dc=com
+dirsrv_bename: userRoot
+dirsrv_othersuffixes: []
+dirsrv_rootdn: cn=Directory Manager
+# dirsrv_rootdn_password: secret
+dirsrv_fqdn: "{{ ansible_nodename }}"
+dirsrv_serverid: default
+dirsrv_port: 389
+# The tasks run on the same server as 389DS, so this will be localhost in most cases
+dirsrv_server_uri: "ldap://localhost:{{ dirsrv_port }}"
+
+dirsrv_install_examples: false
+dirsrv_install_additional_ldif: []
+# Cannot use /tmp, see https://github.com/lvps/389ds-server/issues/18
+dirsrv_install_additional_ldif_dir: "/var/lib/dirsrv/slapd-{{ dirsrv_serverid }}/ldif"
+
+# Logging
+
+dirsrv_logging:
+  audit:
+    enabled: false
+    logrotationtimeunit: day
+    logmaxdiskspace: 400
+    maxlogsize: 200
+    maxlogsperdir: 7
+    mode: 600
+  access:
+    enabled: true
+    logrotationtimeunit: day
+    logmaxdiskspace: 400
+    maxlogsize: 200
+    maxlogsperdir: 7
+    mode: 600
+  error:
+    enabled: true
+    logrotationtimeunit: day
+    logmaxdiskspace: 400
+    maxlogsize: 200
+    maxlogsperdir: 7
+    mode: 600
+
+# Plugins
+
+# If you want to enable or disable
+# cn=MemberOf Plugin,cn=plugins,cn=config
+# add the cn part to the list, like so:
+# MemberOf Plugin: true
+# true for enabled, false for disabled.
+#
+# This is a valid example:
+# dirsrv_plugins_enabled:
+#   MemberOf Plugin: true
+#   Distributed Numeric Assignment Plugin: false
+#
+# And this is just the empty array syntax, override it as above
+# if you need to enable or disable plugins:
+dirsrv_plugins_enabled: {}
+
+# Ansible doesn't merge dicts by default, i.e. if you want to
+# change only uid_max and gid_max you have to define the _min
+# variables too. When you define dna_plugin, it replaces this
+# default dict entirely.
+# This configuration is only applied if "Distributed Numeric Assignment Plugin" is true in plugins_enabled, and is removed when it is false. If it's not mentioned, nothing is done.
+dirsrv_dna_plugin:
+  gid_min: 2000
+  gid_max: 2999
+  uid_min: 2000
+  uid_max: 2999
+
+# Schema
+
+dirsrv_custom_schema: []
+dirsrv_allow_other_schema_files: false
+
+# Security
+
+dirsrv_tls_enabled: false
+dirsrv_tls_min_version: '1.2'
+dirsrv_tls_certificate_trusted: true  # As in, "publicly trusted because it's signed by a public and recognized CA"
+dirsrv_tls_enforced: false
+dirsrv_tls_minssf: 256
+dirsrv_allow_anonymous_binds: 'rootdse'
+dirsrv_simple_auth_enabled: true
+dirsrv_password_storage_scheme: []
+
+# It's already off by default
+# allow_unauthenticated_binds: false
+
+# Other
+
+dirsrv_factory: false
+dirsrv_ldapi_enabled: false
+dirsrv_sasl_plain_enabled: true
+dirsrv_listen_host:
+dirsrv_secure_listen_host:
+
+# Display supported cipher suites:
+# ldapsearch -xLLL -H ldap://server.example.com:389 -D "cn=Directory Manager" -W -b 'cn=encryption,cn=config' -s base nsSSLSupportedCiphers -o ldif-wrap=no dn: cn=encryption,cn=config
+
+# Display enabled cipher suites:
+# ldapsearch -xLLL -H ldap://localhost -D "cn=Directory Manager" -W -b 'cn=encryption,cn=config' -s base nsSSLEnabledCiphers -o ldif-wrap=no

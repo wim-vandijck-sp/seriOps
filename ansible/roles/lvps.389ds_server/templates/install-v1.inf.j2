@@ -1,0 +1,36 @@
+#
+# {{ ansible_managed }}
+#
+# Supported directives:
+# https://access.redhat.com/documentation/en-us/red_hat_directory_server/10/html/installation_guide/parameters_in_inf_files
+
+[General]
+FullMachineName = {{ dirsrv_fqdn }}
+# StrictHostCheck = false is needed when installing behind a load balancer.
+# If true, FullMachineName must be the hostname, and the hostname must be a valid FQDN.
+# I don't think this is needed anymore, possibly it was required for the administration
+# server, so it's always set to false.
+StrictHostCheck = false
+SuiteSpotUserID = dirsrv
+SuiteSpotGroup = dirsrv
+
+[slapd]
+ServerPort = {{ dirsrv_port }}
+ServerIdentifier = {{ dirsrv_serverid }}
+Suffix = {{ dirsrv_suffix }}
+ds_bename = {{ dirsrv_bename }}
+RootDN = {{ dirsrv_rootdn }}
+RootDNPwd = {{ dirsrv_rootdn_password }}
+{% if dirsrv_install_examples %}
+	AddOrgEntries = Yes
+	AddSampleEntries = Yes
+	InstallLdifFile = suggest
+{% else %}
+	AddOrgEntries = No
+	AddSampleEntries = No
+	{% if dirsrv_install_additional_ldif|length > 0 %}
+	{% for file in dirsrv_install_additional_ldif %}
+	InstallLdifFile = /tmp/{{ file|basename }}
+	{% endfor %}
+	{% endif %}
+{% endif %}

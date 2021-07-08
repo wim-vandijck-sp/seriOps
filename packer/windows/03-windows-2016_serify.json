@@ -1,0 +1,127 @@
+{
+  "builders": [
+    {
+      "boot_wait": "0s",
+      "communicator": "winrm",
+      "configuration_version": "8.0",
+      "cpus": 2,
+      "disk_size": "{{user `disk_size`}}",
+      "enable_secure_boot": true,
+      "enable_virtualization_extensions": true,
+      "floppy_files": [
+        "{{user `autounattend`}}",
+        "./scripts/disable-screensaver.ps1",
+        "./scripts/disable-winrm.ps1",
+        "./scripts/enable-winrm.ps1",
+        "./scripts/microsoft-updates.bat",
+        "./scripts/unattend.xml",
+        "./scripts/sysprep.bat"
+      ],
+      "guest_additions_mode": "disable",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "iso_url": "{{user `iso_url`}}",
+      "memory": "{{user `memory`}}",
+      "shutdown_command": "a:/sysprep.bat",
+      "switch_name": "{{user `hyperv_switchname`}}",
+      "type": "hyperv-iso",
+      "vm_name": "WindowsServer2016",
+      "winrm_password": "vagrant",
+      "winrm_timeout": "{{user `winrm_timeout`}}",
+      "winrm_username": "vagrant"
+    },
+    {
+      "boot_wait": "1m",
+      "communicator": "winrm",
+      "disk_adapter_type": "lsisas1068",
+      "disk_type_id": "{{user `disk_type_id`}}",
+      "floppy_files": [
+        "./scripts/install_chocolatey.ps1",
+        "./scripts/install_ps5.ps1",
+        "./scripts/install_windows_updates.ps1"
+      ],
+      "headless": "{{user `headless`}}",
+      "output_directory": "{{ user `build_directory` }}/output-{{ build_type}}-{{ user `image_name`}}/",
+      "source_path": "{{ user `build_directory` }}/output-{{user `template`}}-{{ build_type }}-updates_wmf5/SERI-{{ build_type }}-updated.vmx",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "type": "vmware-vmx",
+      "vm_name": "SERI-{{ build_type }}-WindowsServer2016",
+      "vmx_data": {
+        "RemoteDisplay.vnc.enabled": "false",
+        "RemoteDisplay.vnc.port": "5900"
+      },
+      "vmx_remove_ethernet_interfaces": false,
+      "vnc_port_max": 5980,
+      "vnc_port_min": 5900,
+      "winrm_password": "vagrant",
+      "winrm_timeout": "{{user `winrm_timeout`}}",
+      "winrm_username": "vagrant"
+    },
+    {
+      "boot_wait": "1m",
+      "communicator": "winrm",
+      "guest_additions_mode": "disable",
+      "headless": "{{user `headless`}}",
+      "output_directory": "{{ user `build_directory` }}/output-{{ build_type }}-{{ user `image_name`}}/",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "source_path": "{{ user `build_directory` }}/output-{{user `template`}}-{{ build_type }}/SERI-{{ build_type }}.ovf",
+      "type": "virtualbox-ovf",
+      "vm_name": "SERI-{{ build_type }}-WindowsServer2016",
+      "winrm_password": "vagrant",
+      "winrm_timeout": "{{user `winrm_timeout`}}",
+      "winrm_username": "vagrant",
+      "winrm_use_ssl": false
+    }
+  ],
+  "post-processors": [
+    [
+      {
+        "keep_input_artifact": true,
+        "output": "{{ user `template` }}-{{.Provider}}.box",
+        "type": "vagrant"
+      }
+    ]
+  ],
+  "provisioners": [
+    {
+        "type": "powershell",
+        "script": "scripts/configure_remoting_for_ansible.ps1",
+        "elevated_user": "vagrant",
+        "elevated_password": "vagrant"
+    },
+    {
+        "type": "powershell",
+        "script": "scripts/disable_password_complexity.ps1",
+        "elevated_user": "vagrant",
+        "elevated_password": "vagrant"
+    },
+    {
+        "type": "ansible",
+        "extra_arguments": [
+          "--connection",
+          "packer",
+          "--extra-vars",
+          "ansible_shell_type=powershell ansible_shell_executable=None ansible_winrm_transport=basic"
+        ],
+        "playbook_file": "../../ansible/win.yml",
+        "use_proxy": "false",
+        "user": "vagrant"
+    },
+    {
+        "type": "windows-restart",
+        "restart_timeout": "1h"
+    }
+  ],
+  "variables": {
+    "autounattend": "./answer_files/2016/Autounattend.xml",
+    "headless": "false",
+    "hyperv_switchname": "{{env `hyperv_switchname`}}",
+    "os_name": "WindowsServer2016",
+    "image_name": "seri",
+    "restart_timeout": "5m",
+    "template": "windows-2016-seri",
+    "build_directory": "../../builds",
+    "winrm_timeout": "4h",
+    "source_path": "{{ user `build_directory` }}/output-WindowsServer2016-updates_wmf5/WindowsServer2016-updates_wmf5.vmx"
+  }
+}
+

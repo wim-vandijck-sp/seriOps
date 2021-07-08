@@ -1,0 +1,39 @@
+#project-level gitignore
+#https://git-scm.com/docs/gitignore
+
+#ignore secret property files used for testing, unless it is the the template one we use for examples
+#this template one will never have real customer data and is merely an example
+build.secret.properties
+target.secret.properties
+!environments/template/build.secret.properties
+!environments/template/target.secret.properties
+
+#ignore base folders that have install media, build files, etc.
+/build
+/bin
+/base
+**/builds
+**/packer_cache
+
+#ignore patch log files and other log stuff
+patch_*.log
+*.log
+
+#exclude pem (rsa key files)
+*.pem
+*.pem.pub
+
+#exclude ansible aspects
+*.retry
+
+# skip vagrant stuff
+.vagrant
+*.box
+
+.DS_Store
+ansible/roles/identityiq/files
+vault-password-file
+
+ansible.orig/**
+
+secrets/**

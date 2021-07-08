@@ -1,0 +1,18 @@
+tomcat_root: /opt/tomcat
+
+home_location: /home/sailpoint
+
+identityiq_version: 8.2
+#identityiq_patch_version: p2
+
+iiq_admin_user: spadmin
+
+identityiq_root: "{{ tomcat_root }}/webapps/identityiq"
+
+ssd_version: 6.1
+ssd_file: "ssd-v{{ ssd_version }}.zip"
+
+web_inf_dir: "{{ tomcat_root }}/webapps/identityiq/WEB-INF"
+java_cmd: java -classpath {{ web_inf_dir }}/lib/identityiq.jar:{{ web_inf_dir }}/classes sailpoint.launch.Launcher
+
+iiq_logfile_location: /var/log/tomcat/sailpoint.log

@@ -1,0 +1,23 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    hostname: seri
+    username: vagrant
+    # Generated via: printf vagrant | mkpasswd -m sha-512 -S vagrant. -s
+    password: "$6$vagrant.$sd6r0/OKL.FIGZbhanVkrLassSxoPRv1h5lkISsmBONqaLUGVXkEcD22Ddak5W8JSxeU0VFkU/We1Y7o4hVO/1"
+  network:
+    version: 2
+    ethernets:
+      eth0: 
+        dhcp4: true
+        dhcp-identifier: mac
+  late-commands:
+    - 'sed -i "s/^#*\(send dhcp-client-identifier\).*$/\1 = hardware;/" /target/etc/dhcp/dhclient.conf'
+    - 'sed -i "s/dhcp4: true/&\n      dhcp-identifier: mac/" /target/etc/netplan/00-installer-config.yaml'
+  early-commands:
+    # otherwise packer tries to connect and exceed max attempts:
+    - systemctl stop ssh
+    - timedatectl set-local-rtc 1
+  ssh:
+    install-server: true

@@ -1,0 +1,136 @@
+---
+- name: Get the current kernel release.
+  command: uname -r
+  changed_when: false
+  register: kernel_release
+
+- name: Set the appropriate libselinux package for RHEL 8.
+  set_fact:
+    packer_rhel_libselinux_package: python3-libselinux
+    when: ansible_distribution_major_version | int == 8
+
+# Done by packer and kickstatrt
+- name: Ensure necessary packages are installed.
+  dnf:
+    name:
+      - wget
+      - perl
+      - cpp
+      - gcc
+      - make
+      - bzip2
+      - kernel-headers
+      - kernel-devel
+      - "kernel-devel-{{ kernel_release.stdout }}"
+      - "{{ packer_rhel_libselinux_package }}"
+      - elfutils-libelf-devel
+      - cifs-utils
+      - vim
+    state: present
+
+- name: Install jinja2 python package
+  pip:
+    name: jinja2==2.11.3
+
+# Fix slow DNS.
+- name: Fix slow DNS (adapted from Bento).
+  lineinfile:
+    dest: /etc/sysconfig/network
+    regexp: '^RES_OPTIONS'
+    line: 'RES_OPTIONS="single-request-reopen"'
+    state: present
+
+- name: Restart network service (RHEL < 8).
+  service: name=network state=restarted
+  when: ansible_distribution_major_version | int == 8
+
+# # Create sailpoint user
+# - name: Ensure group "sailpoint" exists
+#   ansible.builtin.group:
+#     name: sailpoint
+#     state: present
+
+# - name: Add the user 'sailpoint'
+#   ansible.builtin.user:
+#     name: sailpoint
+#     comment: SailPoint User
+#     group: sailpoint
+
+# # Vagrant SSH configuration.
+# - name: Configure SailPoint .ssh directory.
+#   file:
+#     path: /home/sailpoint/.ssh
+#     state: directory
+#     owner: sailpoint
+#     group: sailpoint
+#     mode: 0700
+
+# - name: Get Vagrant's public key (vagrant)
+#   get_url:
+#     url: https://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub
+#     dest: /home/vagrant/.ssh/authorized_keys
+#     owner: vagrant
+#     group: vagrant
+#     mode: 0600
+
+# - name: Get Vagrant's public key.(sailpoint)
+#   get_url:
+#     url: https://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub
+#     dest: /home/sailpoint/.ssh/authorized_keys
+#     owner: sailpoint
+#     group: sailpoint
+#     mode: 0600
+
+# VirtualBox tools installation.
+# - name: Check if VirtualBox is running the guest VM.
+#   stat: path=/home/sailpoint/.vbox_version
+#   register: virtualbox_check
+
+# - include_tasks: virtualbox.yml
+#   when: virtualbox_check.stat.exists
+
+# VMware tools installation.
+- name: Check if VMWare is running the guest VM.
+  shell: "cat /proc/scsi/scsi | grep VMware"
+  changed_when: false
+  failed_when: false
+  register: vmware_check
+
+- include_tasks: vmware.yml
+  when: vmware_check.rc == 0
+
+# Cleanup tasks.
+# - name: Remove unneeded packages.
+#   dnf:
+#     name:
+#       - cpp
+#       - kernel-devel
+#       - kernel-headers
+#     state: absent
+
+- name: Clean up dnf.
+  command: >
+    dnf clean all
+    warn=false
+  changed_when: true
+
+- name: Remove any remnants of VirtualBox ISOs.
+  shell: >
+    rm -rf VBoxGuestAdditions_*.iso VBoxGuestAdditions_*.iso.?
+    warn=false
+  tags: ['skip_ansible_lint']
+
+- name: Remove RedHat interface persistence (step 1).
+  command: >
+    rm -fr /etc/udev/rules.d/70-persistent-net.rules
+    warn=false
+  tags: ['skip_ansible_lint']
+
+- name: Remove RedHat interface persistence (step 2).
+  lineinfile:
+    dest: /etc/sysconfig/network-scripts/ifcfg-eth0
+    regexp: "{{ item }}"
+    state: absent
+  with_items:
+    - '^HWADDR'
+    - '^UUID'
