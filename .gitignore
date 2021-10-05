@@ -37,3 +37,6 @@ vault-password-file
 ansible.orig/**
 
 secrets/**
+
+.vscode
+packerlog.txt
