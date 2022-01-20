@@ -1,5 +1,6 @@
 #!/bin/sh -eux
 
+# https://patorjk.com/software/taag/#p=display&f=Big&t=SERI%20Gibraltar
 seri="
    _____ ______ _____  _____    _____ _ _               _ _             
   / ____|  ____|  __ \|_   _|  / ____(_) |             | | |            
