@@ -9,13 +9,15 @@
     owner: tomcat
     group: tomcat
     state: directory
+    mode: '0774'
       
-- name: Create folder to extractt identityiq.zip
+- name: Create folder to extract identityiq.zip
   file: 
     path: "{{ home_location }}/identityiq/"
     state: directory
     owner: sailpoint
     group: sailpoint
+    mode: '0774'
 
 - name: Extract identityiq.zip file
   unarchive:
@@ -56,11 +58,13 @@
   template:
     src: "log4j2.properties.j2"
     dest: "{{ identityiq_root }}/WEB-INF/classes/"
+    mode: '0644'
 
 - name: Copy iiq.properties file
   template:
     src: "iiq.properties.j2"
     dest: "{{ identityiq_root }}/WEB-INF/classes/"
+    mode: '0644'
   notify: restart tomcat
 
 - name: Import init.xml
@@ -72,6 +76,7 @@
   async: 1200
   poll: 5
   register: cmdout
+  changed_when: cmdout.rc != 0
 
 - name: Import init-lcm.xml
   command: "{{ java_cmd }} console iiqBeans -c \"import init-lcm.xml\""
@@ -82,6 +87,8 @@
   async: 1200
   poll: 5
   register: cmdout
+  changed_when: cmdout.rc != 0
+
 
 # - name: Import init-seri.xml
 #   command: "{{ java_cmd }} console iiqBeans -c \"import seri/init-seri.xml\""
@@ -95,7 +102,7 @@
 
 - name: Patch identityiq web
   unarchive:
-    src: "identityiq-{{ identityiq_version}}{{ identityiq_patch_version }}.jar"
+    src: "identityiq-{{ identityiq_version }}{{ identityiq_patch_version }}.jar"
     dest: "{{ identityiq_root }}/"
   when: 
     - identityiq_patch_version is defined
@@ -104,7 +111,7 @@
   mysql_db:
     name: identityiq
     state: import
-    target: "{{ identityiq_root }}/WEB-INF/database/upgrade_identityiq_tables-{{ identityiq_version}}{{ identityiq_patch_version }}.mysql"
+    target: "{{ identityiq_root }}/WEB-INF/database/upgrade_identityiq_tables-{{ identityiq_version }}{{ identityiq_patch_version }}.mysql"
   when: 
     - identityiq_patch_version is defined
 
@@ -115,3 +122,9 @@
   async: 1200
   poll: 5
   register: cmdout
+  changed_when: cmdout.rc != 0
+
+- name: restart tomcat
+  ansible.builtin.service:
+    name: "tomcat"
+    state: restarted
