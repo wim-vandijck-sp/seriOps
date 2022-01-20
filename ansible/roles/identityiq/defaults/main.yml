@@ -3,7 +3,7 @@ tomcat_root: /opt/tomcat
 home_location: /home/sailpoint
 
 identityiq_version: 8.2
-#identityiq_patch_version: p2
+identityiq_patch_version: p1
 
 iiq_admin_user: spadmin
 
