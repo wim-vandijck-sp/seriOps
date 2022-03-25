@@ -7,3 +7,9 @@ ansible_password=vagrant
 ansible_connection=winrm
 ansible_winrm_server_cert_validation=ignore
 ansible_winrm_credssp_disable_tlsv1_2=True
+
+[linux]
+192.168.0.159
+
+[linux:vars]
+ansible_user=root

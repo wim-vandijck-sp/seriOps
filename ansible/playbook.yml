@@ -1,19 +1,25 @@
 ---
-- name: prepare
+- name: bootstrap SERI host
   hosts: all
-  become: yes
+  become: true
   gather_facts: true
-
+  vars_files:
+    - "vault/main.yml"
+    
   roles:
     - role: init
     - role: robertdebock.bootstrap
     - role: robertdebock.core_dependencies
+    - role: robertdebock.hostname
+      hostname: seri
+      hostname_reboot: no
     - role: robertdebock.update
       update_reboot: no
     - role: robertdebock.java
+      java_version: "11"
     - role: robertdebock.tomcat
       tomcat_version: 9
-      tomcat_version9: 9.0.45
+      tomcat_version9: 9.0.68
       tomcat_xms: 1024M
       tomcat_xmx: 2048M
     - role: robertdebock.mysql
@@ -25,34 +31,9 @@
         - name: identityiq
           password: identityiq
           priv: "identityiq.*:ALL"
-    - role: lvps.389ds_server
-      dirsrv_suffix: dc=seri,dc=sailpointdemo,dc=com
-      dirsrv_rootdn: cn=admin
-      dirsrv_rootdn_password: S@ilp0!nt
-      dirsrv_serverid: customized
-      dirsrv_install_examples: true
-      dirsrv_logging:
-        audit:
-          enabled: true
-          logrotationtimeunit: day
-          logmaxdiskspace: 400
-          maxlogsize: 200
-          maxlogsperdir: 14
-          mode: 600
-        access:
-          enabled: true
-          logrotationtimeunit: day
-          logmaxdiskspace: 400
-          maxlogsize: 200
-          maxlogsperdir: 14
-          mode: 600
-        error:
-          enabled: true
-          logrotationtimeunit: day
-          logmaxdiskspace: 400
-          maxlogsize: 200
-          maxlogsperdir: 14
-          mode: 600
-      plugins_enabled:
-        MemberOf Plugin: true
+    - role: 389-ds
     - role: identityiq
+      include_group_management: "no"
+    - role: robertdebock.php
+    - role: orangehrm
+      orangehrm_version: "5.1"

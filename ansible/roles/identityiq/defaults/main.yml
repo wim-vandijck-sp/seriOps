@@ -5,7 +5,7 @@ hostname: seri
 
 # When using GA version, comment the patch_version and ets_version
 identityiq_version: 8.3
-#identityiq_patch_version:
+identityiq_patch_version: p1
 #identityiq_ets_version:
 
 iiq_admin_user: spadmin
@@ -24,3 +24,5 @@ repo_name: "rapidLight"
 repo_url: "github.com/wim-vandijck-sp/{{ repo_name }}"
 
 git_dest: "{{ home_location }}/{{ repo_name }}"
+
+include_group_management: "no"

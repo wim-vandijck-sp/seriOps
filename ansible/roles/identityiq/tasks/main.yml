@@ -1,4 +1,12 @@
 ---
-- include_tasks: build_war.yml
+- name: "Build war file"
+  ansible.builtin.include_tasks: build_war.yml
 
-- include_tasks: install.yml
+- name: "Install IIQ"
+  ansible.builtin.include_tasks: install.yml
+
+- name: "Install group management extension"
+  ansible.builtin.include_tasks: groupmanagement.yml
+  when: 
+    - include_group_management is defined
+    - include_group_management == "yes"

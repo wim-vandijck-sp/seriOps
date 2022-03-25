@@ -28,6 +28,7 @@ _core_dependencies_packages:
     - passwd
     - python3-apt
     - "linux-headers-{{ ansible_kernel }}"
+    - gnupg
 
   RedHat:
     - dnf

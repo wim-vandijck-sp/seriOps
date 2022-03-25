@@ -4,7 +4,7 @@
 
 This repository contains several tools and scripts to automate the build of the SE Reference Implementation (SERI).
 
-It will build two VMs, one CentOS linux, and a Windows Server 2016.
+It will build two VMs, one Debian linux, and a Windows Server 2016.
 
 On the linux VM, it will install IIQ, and its required components, and additionally any applications that are referenced in the Standard Demo script. (LDAP, OrangeHRM, etc). 
 
@@ -14,8 +14,6 @@ The Windows VM will contain Active Directory, with its Users and Groups, and a f
 
 * Packer (https://www.packer.io/) : HashiCorp tool to build automated machine images.
     * Used to created the CentOS and Windows boxes
-* Terraform (https://www.terraform.io/) : HashiCorp tool to manage Infrastructure as Code.
-    * Used to create AWS environment
 * Vagrant (https://www.vagrantup.com/) : HashiCorp tool to manage deployment environments.
     * Used to create the final VM box. This can be used as a template to be spun up and destroyed at will.
 * Ansible (https://www.ansible.com/) : Automation and configuration management tool
@@ -34,7 +32,8 @@ brew install ansible
 
 In ansible, most passwords are retrieved from configuration files containing variables. To avoid having secrets in there in plaintext, Ansible provides what is called Ansible Vault, which is a simple way of encrypting files or variabels, and then referring to the encrypted files, passing a password when running the playbook.
 
-For this to work in our case, put a textfile name `vault-password-file` in the ansible/ folder, containing the password you retrieve from your colleagues ;-). #TODO add this password in whatever solution we end up choosing for sharing passwords.
+For this to work in our case, put a textfile name `vault-password-file` in the ansible/ folder, containing the password you retrieve from your colleagues ;-). 
+#TODO add this password in whatever solution we end up choosing for sharing passwords.
 
 To pass this password to running your playbook, add the config paramater `--vault-password-file vault-password-file` to your ansible command.
 
@@ -57,14 +56,13 @@ If needed, you can edit it by using the `edit` command in place of `decrcypt`. Y
 
 Packer uses a yaml configuration file. In it you describe all the virtualization layers you want to build for. Packer will download the centos iso file, start it up in your desired hypervisor, and run kickstart to do an automated installation. This installs base software packages, reboots, then updates all the packages, and sets up some basic configurations.
 
-### 2. Ansible configures machine
-
-After that, packer runs what is called provisioners, these can be shell scripts, or callouts to configuration tools such as chef or in this case ansible. It runs an ansible playbook that will install IIQ and all the software needed for a standard demo.
-
-After the playbook some last scripts are run to clean up installation and minimize the diskspace in the box.
-### 3. Vagrant packs up machine into box
+### 2. Vagrant packs up machine into box
 
 When ansible has finished its run, vagrant packs up the VM into a vagrant box, which is then saved and can be used as a template.
+
+### 3. Ansible configures machine - via vagrant provision
+
+After that, vagrant will provision the box by running an ansible playbook that will install IIQ and all the software needed for a standard demo.
 ### 4. Profit!!
 
 This box can now either be called to life from the command line with vagrant, or be used to load into VMWare, AWS, SkyTap or what have you.
@@ -72,7 +70,7 @@ This box can now either be called to life from the command line with vagrant, or
 ## Guided Steps
 
 * Copy the identityiq.zip and patch jars to `scripts/ansible/roles/identityiq/files/`
-* (Optional): in the `seri-centos.json` file, under the `variables` section, replace `mirror` with a local mirror for faster iso download (see https://www.centos.org/download/mirrors/ for a list).
+* (Optional): in the `seri-debian.json` file, under the `variables` section, replace `mirror` with a local mirror for faster iso download (see https://www.debian.org/mirror/list for a list).
 * When using local checked out SERI repo, change `seri_source` to the correct path. (Work in progress)
 
 * Build Windows VM
