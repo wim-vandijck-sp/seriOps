@@ -5,10 +5,10 @@ collections:
 
 roles:
 - name: robertdebock.bootstrap
+- name: robertdebock.hostname
 - name: robertdebock.update
 - name: robertdebock.core_dependencies
 - name: robertdebock.java
 - name: robertdebock.service
 - name: robertdebock.tomcat
 - name: robertdebock.mysql
-- name: lvps.389ds_server
