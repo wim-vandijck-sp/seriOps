@@ -49,6 +49,8 @@ and include it in the appropriate ansible with:
     file: secrets.yml
     
 ```
+
+If needed, you can edit it by using the `edit` command in place of `decrcypt`. You can check the contents with `view`.
 ## Process Overview
 
 ### 1. Packer creates machine image
@@ -145,6 +147,22 @@ vagrant provision
 * Alternatively, when the VM is running, mark the ip address and use that in the ansible inventory file. Then, you can just run ansible locally and work from here.
 ## TODO
 
-* Correctly setup AWS from here - integrate with terraform
-* Automate SERI checkout and build
 * Dockerize (lcx-ize?) services and apps on seri machine
+* Get VBox Guest additions working out of the box
+
+## 
+
+* Removed 
+```
+    {
+      "type": "ansible-local",
+      "extra_arguments": [ "--vault-password-file /tmp/vault-password-file --extra-vars \"key_file=/tmp/{{ user `key_file` }}\"" ],
+      "playbook_file": "../ansible/playbook.yml",
+      "galaxy_file":"../ansible/roles/requirements.yml",
+      "role_paths": [
+        "../ansible/roles/identityiq",
+        "../ansible/roles/init"
+      ]
+    },
+```
+right before minimize step. Vagrant should run ansible...
