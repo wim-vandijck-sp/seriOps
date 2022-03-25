@@ -5,48 +5,6 @@
 # This file contains configuration settings for IdentityIQ.  For your unique
 # environment, you will need to adjust the properties below.
 #
-# IdentityIQ can either create its own datasource or use a datasource that is
-# managed by an application server.  Depending on the type of database being
-# used, you will need to do the following:
-#
-# 1) Uncomment the correct sessionFactory.hibernateProperties.hibernate.dialect
-#    and ensure that all other dialects are commented out.
-# 2) If using MS SQL Server, also uncomment the quartz properties:
-#    scheduler.quartzProperties.org.quartz.jobStore.driverDelegateClass and
-#    scheduler.quartzProperties.org.quartz.jobStore.selectWithLockSQL.
-#
-#
-# IDENTITYIQ MANAGED DATASOURCES ONLY
-#
-# In addition to the steps above, if IdentityIQ is creating its own datasource
-# (ie - not using an application server managed datasource), you will need to
-# perform the following steps:
-#
-# 1) Modify dataSource.username and dataSource.password to include the username
-#    and password of the database user.  The password may be an encrypted using
-#    the "encrypt" command when running "iiq console".
-# 2) Configure the dataSource.url to connect to the database, and uncomment the
-#    appropriate dataSource.driverClassName.
-# 3) Optionally configure other connection pool settings.
-#
-#
-# APPLICATION SERVER MANAGED DATASOURCES ONLY
-#
-# In addition to the steps above, if IdentityIQ is using an application server
-# managed datasource, you will need to perform the following steps:
-#
-# 1) Configure the datasource in your application server.  This usually involves
-#    putting the JDBC driver jar file in a common location and configuring
-#    properties for your database connection and pool settings.  Consult the
-#    documentation for the application server for more information.  Also,
-#    ensure that the JDBC driver jar file is not in the WEB-INF\lib directory
-#    of the IdentityIQ web application.
-# 2) Change jndiDataSource.jndiName to point to the location in JNDI in which
-#    the datasource is stored.
-# 3) Change configuredDataSource.targetBeanName to "jndiDataSource".
-#    7.1 update: at the moment targetBeanName doesn't work after the Spring upgrade
-#    you must edit the <alias> definition in configBeans.xml
-#
 
 ##### Application Server Managed Data Source Properties #####
 
@@ -58,8 +16,8 @@ jndiDataSource.jndiName=java:comp/env/jdbc/testDataSource
 configuredDataSource.targetBeanName=dataSource
 
 ##### Data Source Properties #####
-dataSource.maxWait=10000
-dataSource.maxActive=50
+dataSource.maxWaitMillis=10000
+dataSource.maxTotal=50
 dataSource.minIdle=5
 #dataSource.minEvictableIdleTimeMillis=300000
 #dataSource.maxOpenPreparedStatements=-1
@@ -68,8 +26,10 @@ dataSource.username=identityiq
 dataSource.password=1:iCAlakm5CVUe7+Q6hVJIBA==
 
 ##### MySQL/Aurora (without SSL)  #####
-## URL Format: dataSource.url=jdbc:mysql://<host_name>:<port>/<dbname>?useServerPrepStmts=true&tinyInt1isBit=true&useUnicode=true&characterEncoding=utf8&useSSL=false
-dataSource.url=jdbc:mysql://localhost/identityiq?useServerPrepStmts=true&tinyInt1isBit=true&useUnicode=true&characterEncoding=utf8&useSSL=false
+## URL Format: dataSource.url=jdbc:mysql://<host_name>:<port>/<dbname>?useServerPrepStmts=true&tinyInt1isBit=true&useSSL=false&characterEncoding=UTF-8&characterEncoding=UTF-8&serverTimezone=UTC
+## if the client timezone is not UTC, adding the JDBC option 'serverTimezone=UTC' will cause MySQL to behave
+## differently with regard to TIMESTAMP fields. See IdentityIQ Installation Guide for more details.
+dataSource.url=jdbc:mysql://localhost/identityiq?useServerPrepStmts=true&tinyInt1isBit=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
 dataSource.driverClassName=com.mysql.cj.jdbc.Driver
 sessionFactory.hibernateProperties.hibernate.dialect=org.hibernate.dialect.MySQL57Dialect
 
@@ -101,10 +61,9 @@ jndiPluginsDataSource.jndiName=java:comp/env/jdbc/testPluginsDataSource
 # leave the default value "pluginsDataSource".
 configuredPluginsDataSource.targetBeanName=pluginsDataSource
 
-
 ##### Plugins Data Source Properties #####
-pluginsDataSource.maxWait=10000
-pluginsDataSource.maxActive=50
+pluginsDataSource.maxWaitMillis=10000
+pluginsDataSource.maxTotal=50
 pluginsDataSource.minIdle=5
 #pluginsDataSource.minEvictableIdleTimeMillis=300000
 #pluginsDataSource.maxOpenPreparedStatements=-1
@@ -113,22 +72,31 @@ pluginsDataSource.username=identityiqPlugin
 pluginsDataSource.password=1:8ORggiEVfa289a0+YccD4QQO0Eec3V9eSHaQwFHsNR4=
 
 ##### MySQL (without SSL) #####
-## URL Format: dataSource.url=jdbc:mysql://<host_name>:<port>/<dbname>?useServerPrepStmts=true&tinyInt1isBit=true&useUnicode=true&characterEncoding=utf8&useSSL=false
-pluginsDataSource.url=jdbc:mysql://localhost/identityiqPlugin?useServerPrepStmts=true&tinyInt1isBit=true&useUnicode=true&characterEncoding=utf8&useSSL=false
+## URL Format: dataSource.url=jdbc:mysql://<host_name>:<port>/<dbname>?useServerPrepStmts=true&tinyInt1isBit=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
+pluginsDataSource.url=jdbc:mysql://localhost/identityiqPlugin?useServerPrepStmts=true&tinyInt1isBit=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
 pluginsDataSource.driverClassName=com.mysql.cj.jdbc.Driver
 
-##### p6spy #####
-## You also need to modify spy.properties to have the name of the real driver class
-#pluginsDataSource.driverClassName=com.p6spy.engine.spy.P6SpyDriver
-
 #
-# Setting for the BSFManagerPool set on the ruleRunner
-# 
+# Settings for the ruleRunner and its pool
+#
 ruleRunner.maxPoolReuse=1000
-bsfManagerPool.maxActive=30
-bsfManagerPool.minEvictableIdleTimeMillis=900000
-bsfManagerPool.timeBetweenEvictionRunsMillis=600000
+ruleRunnerPoolConfig.maxTotal=-1
+ruleRunnerPoolConfig.maxTotalPerKey=8
+ruleRunnerPoolConfig.maxIdlePerKey=8
+ruleRunnerPoolConfig.minIdlePerKey=0
 
+##### Hibernate Listener Service Thread Pool Settings ######
+# if this is false then the listeners will not be registered.
+# if AI is installed this should probably be set to true.
+hibernateListenerServiceConfig.hibernateListenerEnabled=false
+# number of threads that will always be alive
+hibernateListenerServiceConfig.coreThreads=10
+# max number of threads that can be running if there is a high load
+hibernateListenerServiceConfig.maxThreads=20
+# how long in milliseconds extra threads will sit idle before scaling back down to the core number
+hibernateListenerServiceConfig.keepAliveTime=10000
+# how many changes can be queued up for the threads to work on
+hibernateListenerServiceConfig.queueSize=10000
 
 ##### Debug Settings #####
 
