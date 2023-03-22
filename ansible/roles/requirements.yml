@@ -1,8 +1,4 @@
 ---
-collections:
-- name: community.general
-- name: community.mysql
-
 roles:
 - name: robertdebock.bootstrap
 - name: robertdebock.hostname

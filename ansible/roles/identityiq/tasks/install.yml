@@ -57,7 +57,7 @@
 - name: Copy log4j2.properties file
   template:
     src: "log4j2.properties.j2"
-    dest: "{{ identityiq_root }}/WEB-INF/classes/log4j.properties"
+    dest: "{{ identityiq_root }}/WEB-INF/classes/log4j2.properties"
     mode: '0644'
 
 - name: Copy iiq.properties file

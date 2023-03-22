@@ -9,7 +9,11 @@ Vagrant.configure("2") do |config|
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
-
+  config.vm.provider "parallels" do |prl|
+    prl.update_guest_tools = true
+    prl.name = "Vagrant IIQ Serish"
+    prl.customize ["set", :id, "--device-set", "cdrom0", "--image", "/Applications/Parallels Desktop.app/Contents/Resources/Tools/prl-tools-lin-arm.iso", "--connect"]
+  end
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "debian-arm"
@@ -28,7 +32,7 @@ Vagrant.configure("2") do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
   # via 127.0.0.1 to disable public access
-  config.vm.network "forwarded_port", guest: 8080, host: 8088, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 8080, host: 8181, host_ip: "127.0.0.1"
   config.vm.network "forwarded_port", guest: 80, host: 8888, host_ip: "127.0.0.1"
   config.vm.network "forwarded_port", guest: 9090, host: 9090, host_ip: "127.0.0.1"
   config.vm.network "forwarded_port", guest: 9999, host: 9999, host_ip: "127.0.0.1"
@@ -37,7 +41,7 @@ Vagrant.configure("2") do |config|
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  # config.vm.network "private_network", ip: "192.168.56.10"
+  config.vm.network "private_network", ip: "192.168.56.10"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
@@ -76,7 +80,7 @@ Vagrant.configure("2") do |config|
   config.ssh.dsa_authentication = false
   config.ssh.username = "sailpoint"
   config.ssh.password = "Sailp0!nt"
-  # config.ssh.host = '192.168.56.10'
+  #config.ssh.host = '192.168.56.10'
 
   config.vm.synced_folder "../ansible", "/tmp/vagrant"
 
@@ -91,5 +95,12 @@ Vagrant.configure("2") do |config|
     ansible.galaxy_command = "ansible-galaxy  collection install -r /tmp/vagrant/roles/requirements.yml && ansible-galaxy install -r /tmp/vagrant/roles/requirements.yml"
     ansible.compatibility_mode = "2.0"
     ansible.vault_password_file = "/tmp/vagrant/vault-password-file"
+    #ansible.verbose= "-vvvv"
+    # To force java 11. The version is calculated in vars/main.yml which has a very high precedence
+    ansible.extra_vars = {
+  java_version: 11,
+  java_default_version: 11
+}
+
   end
 end

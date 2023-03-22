@@ -5,35 +5,47 @@
   gather_facts: true
   vars_files:
     - "vault/main.yml"
-    
+  vars:
+    java_version: 11
+    java_default_version: 11
+
   roles:
     - role: init
     - role: robertdebock.bootstrap
     - role: robertdebock.core_dependencies
     - role: robertdebock.hostname
-      hostname: seri
-      hostname_reboot: no
+      vars:
+        hostname: seri.sailpointdemo.com
+        hostname_reboot: no
     - role: robertdebock.update
-      update_reboot: no
+      vars:
+        update_reboot: no
     - role: robertdebock.java
-      java_version: "11"
+      vars:
+        java_version: 11
+        java_default_version: 11
     - role: robertdebock.tomcat
-      tomcat_version: 9
-      tomcat_version9: 9.0.68
-      tomcat_xms: 1024M
-      tomcat_xmx: 2048M
+      vars:
+        tomcat_version: 9
+        tomcat_version9: 9.0.71
+        tomcat_xms: 1024M
+        tomcat_xmx: 2048M
     - role: robertdebock.mysql
-      mysql_databases:
-        - name: identityiq
-          encoding: utf8
-          collation: utf8_bin
-      mysql_users:
-        - name: identityiq
-          password: identityiq
-          priv: "identityiq.*:ALL"
-    - role: 389-ds
+      vars:
+        mysql_databases:
+          - name: identityiq
+            encoding: utf8
+            collation: utf8_bin
+        mysql_users:
+          - name: identityiq
+            password: identityiq
+            priv: "identityiq.*:ALL"
     - role: identityiq
-      include_group_management: "no"
+      vars:
+        include_group_management: "no"
+        serify: "no"
+    - role: 389-ds
     - role: robertdebock.php
     - role: orangehrm
-      orangehrm_version: "5.1"
+      orangehrm_version: "5.3"
+    - role: seri

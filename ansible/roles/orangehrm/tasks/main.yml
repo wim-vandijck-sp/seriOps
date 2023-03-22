@@ -3,6 +3,7 @@
   ansible.builtin.get_url:
     url: "{{ orangehrm_unarchive_url }}"
     dest: "{{ orangehrm_directory }}/orangehrm-{{ orangehrm_version }}.zip"
+    validate_certs: false
     mode: "440"
 
 - name: Ensure OrangeHRM parent folder exists

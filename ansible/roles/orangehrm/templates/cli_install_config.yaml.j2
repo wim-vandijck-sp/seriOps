@@ -4,9 +4,9 @@ database:
   databaseName: {{ orangehrm_database }}
   privilegedDatabaseUser: {{ orangehrm_priv_dbuser }}
   privilegedDatabasePassword: {{ orangehrm_priv_dbpass }}
-  useSameDbUserForOrangeHRM: y # y/n, if this field `n` fill `orangehrmDatabaseUser` and `orangehrmDatabasePassword`
-  orangehrmDatabaseUser: ~
-  orangehrmDatabasePassword: ~
+  useSameDbUserForOrangeHRM: n # y/n, if this field `n` fill `orangehrmDatabaseUser` and `orangehrmDatabasePassword`
+  orangehrmDatabaseUser: {{ orangehrm_dbuser }}
+  orangehrmDatabasePassword: {{ orangehrm_dbpass }}
   isExistingDatabase: n # y/n
 
 organization:
