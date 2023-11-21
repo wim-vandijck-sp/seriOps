@@ -33,6 +33,11 @@
 - name: "RACF Resource"
   ansible.builtin.include_tasks: racf.yml
 
+- name: restart tomcat
+  ansible.builtin.service:
+    name: "tomcat"
+    state: started
+    
 - name: Run setup task
   ansible.builtin.shell: 
     cmd: "{{ java_cmd }} console iiqBeans -c \"run 'Setup Task'\""
