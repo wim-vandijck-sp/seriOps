@@ -9,14 +9,18 @@ Vagrant.configure("2") do |config|
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
-  config.vm.provider "parallels" do |prl|
-    prl.update_guest_tools = true
-    prl.name = "Vagrant IIQ Serish"
-    prl.customize ["set", :id, "--device-set", "cdrom0", "--image", "/Applications/Parallels Desktop.app/Contents/Resources/Tools/prl-tools-lin-arm.iso", "--connect"]
+  config.vm.provider "vmware_fusion" do |v|
+    v.gui = false
   end
+  # config.vm.provider "parallels" do |prl|
+  #   prl.update_guest_tools = true
+  #   prl.name = "Vagrant IIQ Serish"
+  #   prl.customize ["set", :id, "--device-set", "cdrom0", "--image", "/Applications/Parallels Desktop.app/Contents/Resources/Tools/prl-tools-lin-arm.iso", "--connect"]
+  # end
+
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "debian-arm"
+  config.vm.box = "debian-12.1-aarch64"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -41,7 +45,7 @@ Vagrant.configure("2") do |config|
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  config.vm.network "private_network", ip: "192.168.56.10"
+  # config.vm.network "private_network", ip: "192.168.56.10"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
@@ -77,10 +81,10 @@ Vagrant.configure("2") do |config|
   #   apt-get install -y apache2
   # SHELL
   # config.ssh.private_key_path = ".vagrant/machines/default/virtualbox/private_key"
-  config.ssh.dsa_authentication = false
-  config.ssh.username = "sailpoint"
-  config.ssh.password = "Sailp0!nt"
-  #config.ssh.host = '192.168.56.10'
+  # config.ssh.dsa_authentication = false
+  # config.ssh.username = "sailpoint"
+  # config.ssh.password = "Sailp0!nt"
+  # config.ssh.host = '192.168.56.10'
 
   config.vm.synced_folder "../ansible", "/tmp/vagrant"
 
@@ -96,10 +100,9 @@ Vagrant.configure("2") do |config|
     ansible.compatibility_mode = "2.0"
     ansible.vault_password_file = "/tmp/vagrant/vault-password-file"
     #ansible.verbose= "-vvvv"
+    #ansible.tags="ldap"
     # To force java 11. The version is calculated in vars/main.yml which has a very high precedence
     ansible.extra_vars = {
-  java_version: 11,
-  java_default_version: 11
 }
 
   end

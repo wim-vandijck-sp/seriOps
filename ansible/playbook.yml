@@ -5,9 +5,6 @@
   gather_facts: true
   vars_files:
     - "vault/main.yml"
-  vars:
-    java_version: 11
-    java_default_version: 11
 
   roles:
     - role: init
@@ -21,13 +18,10 @@
       vars:
         update_reboot: no
     - role: robertdebock.java
-      vars:
-        java_version: 11
-        java_default_version: 11
     - role: robertdebock.tomcat
       vars:
         tomcat_version: 9
-        tomcat_version9: 9.0.71
+        tomcat_version9: 9.0.80
         tomcat_xms: 1024M
         tomcat_xmx: 2048M
     - role: robertdebock.mysql
@@ -43,8 +37,8 @@
     - role: identityiq
       vars:
         include_group_management: "no"
-        serify: "no"
     - role: 389-ds
+      tags: ldap
     - role: robertdebock.php
     - role: orangehrm
       orangehrm_version: "5.3"

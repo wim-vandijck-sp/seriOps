@@ -1,0 +1,25 @@
+---
+- name: Include secret vars
+  include_vars:
+    file: secrets.yml
+    
+- name: Copy LDAP Resource files over
+  ansible.builtin.copy: 
+    src: EnterpriseDirectory
+    dest: "{{ web_inf_dir }}/config/"
+    owner: tomcat
+    group: tomcat
+    mode: '0644'
+    directory_mode: 774
+
+- name: Import LDAP setup
+  ansible.builtin.shell:
+    chdir: "{{ web_inf_dir }}/config/EnterpriseDirectory"
+    cmd: "{{ java_cmd }} console iiqBeans -c \"import setup.xml\""
+    stdin: |
+      {{ iiq_admin_user }}
+      {{ iiq_admin_password }}
+  async: 1200
+  poll: 5
+  register: cmdout
+  changed_when: cmdout.rc != 0

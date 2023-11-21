@@ -1,0 +1,34 @@
+---
+- name: Include secret vars
+  include_vars:
+    file: secrets.yml
+    
+- name: Copy EPIC Resource files over
+  ansible.builtin.copy: 
+    src: Epic
+    dest: "{{ web_inf_dir }}/config/"
+    owner: tomcat
+    group: tomcat
+    mode: '0644'
+    directory_mode: 774
+
+- name: Run EPIC setup task
+  ansible.builtin.shell: 
+    cmd: "{{ java_cmd }} console iiqBeans -c \"import setup.xml\""
+    chdir: "{{ web_inf_dir }}/config/Epic/"
+    stdin: |
+      {{ iiq_admin_user }}
+      {{ iiq_admin_password }}
+  async: 1200
+  poll: 5
+  register: cmdout
+  changed_when: cmdout.rc != 0
+
+- name: Create EPIC database
+  community.mysql.mysql_db:
+    name: epic
+    login_user: root
+    login_password: "{{ mysql_root_passwd }}"
+    state: import
+    target: "{{ web_inf_dir }}/config/Epic/EPIC-createMySQLTables.sql"
+

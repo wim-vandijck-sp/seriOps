@@ -1,0 +1,33 @@
+---
+- name: Include secret vars
+  include_vars:
+    file: secrets.yml
+    
+- name: Copy PRISM Resource files over
+  ansible.builtin.copy: 
+    src: Prism
+    dest: "{{ web_inf_dir }}/config/"
+    owner: tomcat
+    group: tomcat
+    mode: '0644'
+    directory_mode: 774
+
+- name: Run Prism setup task
+  ansible.builtin.shell: 
+    cmd: "{{ java_cmd }} console iiqBeans -c \"import setup.xml\""
+    chdir: "{{ web_inf_dir }}/config/Prism/"
+    stdin: |
+      {{ iiq_admin_user }}
+      {{ iiq_admin_password }}
+  async: 1200
+  poll: 5
+  register: cmdout
+  changed_when: cmdout.rc != 0
+
+- name: Create PRISM database
+  community.mysql.mysql_db:
+    name: prism
+    login_user: root
+    login_password: "{{ mysql_root_passwd }}"
+    state: import
+    target: "{{ web_inf_dir }}/config/Prism/prism.ddl"

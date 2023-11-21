@@ -3,6 +3,16 @@
   include_vars:
     file: secrets.yml
 
+- name: Stop app server
+  ansible.builtin.service:
+    name: "tomcat"
+    state: stopped
+
+- name: Remove identityiq application folder
+  file:
+    path: "{{ identityiq_root }}"
+    state: absent
+
 - name: Create identityiq application folder
   file:
     path: "{{ identityiq_root }}"
@@ -19,22 +29,41 @@
     group: sailpoint
     mode: '0774'
 
-# - name: Extract identityiq.zip file
-#   unarchive:
-#     src: "identityiq-{{ identityiq_version }}.zip"
-#     dest: "{{ home_location }}/identityiq/"
-#     owner: sailpoint
-#     group: sailpoint
+- name: Copy identityiq.zip file
+  ansible.builtin.copy:
+    src: "identityiq-{{ identityiq_version }}.zip"
+    dest: "{{ home_location }}"
+    owner: sailpoint
+    group: sailpoint
+    mode: '0644'
+    force: false
+
+- name: Copy patch file
+  ansible.builtin.copy:
+    src: "identityiq-{{ identityiq_version }}{{ identityiq_patch_version }}.jar"
+    dest: "{{ home_location }}"
+    owner: sailpoint
+    group: sailpoint
+    mode: '0644'
+  when: identityiq_patch_version is defined
+
+- name: Extract installer file
+  unarchive: 
+    src: "{{ home_location }}/identityiq-{{ identityiq_version }}.zip"
+    remote_src: yes
+    dest: "{{ home_location }}/identityiq"
 
 - name: Deploy war file
   unarchive: 
-    src: "{{ git_dest }}/build/deploy/identityiq.war"
+    src: "{{ home_location }}/identityiq/identityiq.war"
     remote_src: yes
     dest: "{{ identityiq_root }}"
 
 - name: Drop existing database
   mysql_db:
-    name: identityiq
+    name: 
+    - identityiq
+    - identityiqah
     state: absent
 
 - name: Create identityiq database
@@ -50,7 +79,7 @@
 
 - name: Create identityiq schema
   mysql_db:
-    name: identityiq
+    name: all
     state: import
     target: "{{ identityiq_root }}/WEB-INF/database/create_identityiq_tables-{{ identityiq_version }}.mysql"
 
@@ -63,9 +92,18 @@
 - name: Copy iiq.properties file
   template:
     src: "iiq.properties.j2"
-    dest: "{{ identityiq_root }}/WEB-INF/classes/"
+    dest: "{{ identityiq_root }}/WEB-INF/classes/iiq.properties"
     mode: '0644'
   notify: restart tomcat
+
+- name: Make iiq script executable
+  file:
+    dest: "{{ identityiq_root }}/WEB-INF/bin/iiq"
+    mode: u+x
+
+- name: Pause for 5 seconds
+  ansible.builtin.pause:
+    seconds: 5
 
 - name: Import init.xml
   command: "{{ java_cmd }} console iiqBeans -c \"import init.xml\""
@@ -89,20 +127,10 @@
   register: cmdout
   changed_when: cmdout.rc != 0
 
-
-# - name: Import init-seri.xml
-#   command: "{{ java_cmd }} console iiqBeans -c \"import seri/init-seri.xml\""
-#   args:
-#     stdin: |
-#       {{ iiq_admin_user }}
-#       {{ iiq_admin_password }}
-#   async: 1200
-#   poll: 5
-#   register: cmdout
-
 - name: Patch identityiq web
   unarchive:
-    src: "identityiq-{{ identityiq_version }}{{ identityiq_patch_version }}.jar"
+    src: "{{ home_location }}/identityiq-{{ identityiq_version }}{{ identityiq_patch_version }}.jar"
+    remote_src: true
     dest: "{{ identityiq_root }}/"
   when: 
     - identityiq_patch_version is defined
@@ -123,8 +151,12 @@
   poll: 5
   register: cmdout
   changed_when: cmdout.rc != 0
+  notify: restart tomcat
 
-- name: restart tomcat
-  ansible.builtin.service:
-    name: "tomcat"
-    state: restarted
+- name: Change ownership to tomcat
+  ansible.builtin.file:
+    path: /opt/tomcat
+    state: directory
+    recurse: yes
+    owner: tomcat
+    group: tomcat

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition name="Refresh Identity Cube - Provisioning" resultAction="Delete" subType="task_item_type_identity" type="Identity">
+  <Attributes>
+    <Map>
+      <entry key="correlateEntitlements" value="true"/>
+      <entry key="excludeInactive" value="true"/>
+      <entry key="provision" value="true"/>
+      <entry key="promoteAttributes" value="true"/>
+      <entry key="refreshRoleMetadata" value="true"/>
+      <entry key="refreshScorecard" value="true"/>
+      <entry key="taskCompletionEmailNotify" value="Disabled"/>
+    </Map>
+  </Attributes>
+  <Description>Perform a full refresh of all the identities.</Description>
+  <Parent>
+    <Reference class="sailpoint.object.TaskDefinition" name="Identity Refresh"/>
+  </Parent>
+</TaskDefinition>

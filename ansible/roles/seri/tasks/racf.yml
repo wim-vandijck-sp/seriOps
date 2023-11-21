@@ -1,0 +1,25 @@
+---
+- name: Include secret vars
+  include_vars:
+    file: secrets.yml
+    
+- name: Copy RACF Resource files over
+  ansible.builtin.copy: 
+    src: Resource-RACF
+    dest: "{{ web_inf_dir }}/config/"
+    owner: tomcat
+    group: tomcat
+    mode: '0644'
+    directory_mode: 774
+
+- name: Run RACF setup task
+  ansible.builtin.shell: 
+    cmd: "{{ java_cmd }} console iiqBeans -c \"import setup.xml\""
+    chdir: "{{ web_inf_dir }}/config/Resource-RACF/"
+    stdin: |
+      {{ iiq_admin_user }}
+      {{ iiq_admin_password }}
+  async: 1200
+  poll: 5
+  register: cmdout
+  changed_when: cmdout.rc != 0

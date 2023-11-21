@@ -3,32 +3,39 @@
   include_vars:
     file: secrets.yml
 
+- name: "SERI Base"
+  ansible.builtin.include_tasks: seri.yml
 
-- name: Generate hosts file
-  ansible.builtin.template:
-    src=hosts.j2
-    dest=/etc/hosts
+- name: "HR Resource"
+  ansible.builtin.include_tasks: hr.yml
     
-- name: Copy HR files over
-  ansible.builtin.copy: 
-    src: HR
-    dest: /var/tmp/
-    owner: tomcat
-    group: tomcat
-    mode: '0644'
+- name: "LDAP Resource"
+  ansible.builtin.include_tasks: ldap.yml
 
-- name: Copy LDAP files over
-  ansible.builtin.copy: 
-    src: EnterpriseDirectory
-    dest: /var/tmp/
-    owner: tomcat
-    group: tomcat
-    mode: '0644'
+- name: "EPIC Resource"
+  ansible.builtin.include_tasks: epic.yml
 
-- name: Setup HR App
-  command: "{{ java_cmd }} console iiqBeans -c \"import setup.xml\""
-  args:
-    chdir: /var/tmp/HR
+- name: "Oracle EBS Resource"
+  ansible.builtin.include_tasks: oracleebs.yml
+
+- name: "PRISM Resource"
+  ansible.builtin.include_tasks: prism.yml
+
+- name: "TRAKK Resource"
+  ansible.builtin.include_tasks: trakk.yml
+
+- name: "TRAKK-WS Resource"
+  ansible.builtin.include_tasks: trakk-ws.yml
+  
+- name: "ERP Portal Resource"
+  ansible.builtin.include_tasks: erpportal.yml
+
+- name: "RACF Resource"
+  ansible.builtin.include_tasks: racf.yml
+
+- name: Run setup task
+  ansible.builtin.shell: 
+    cmd: "{{ java_cmd }} console iiqBeans -c \"run 'Setup Task'\""
     stdin: |
       {{ iiq_admin_user }}
       {{ iiq_admin_password }}
@@ -36,18 +43,3 @@
   poll: 5
   register: cmdout
   changed_when: cmdout.rc != 0
-
-- name: Setup LDAP App
-  command: "{{ java_cmd }} console iiqBeans -c \"import setup.xml\""
-  args:
-    chdir: /var/tmp/EnterpriseDirectory
-    stdin: |
-      {{ iiq_admin_user }}
-      {{ iiq_admin_password }}
-  async: 1200
-  poll: 5
-  register: out
-  changed_when: out.rc != 0
-
-
-# - name: Import SERI Identity ObjectConfig

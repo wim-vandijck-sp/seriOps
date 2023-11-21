@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="TRAKK - ManagedPromotion" type="ManagedAttributePromotion">
+  <Description>A ManagedAttributePromotion rule is called when ManagedAttributes are automatically created during aggregation, refresh, or from the missing entitlement descriptions task.
+
+This can modify the ManagedAttribute that is passed in to set fields such as owner, requestable, or explanations before they are saved.</Description>
+  <Signature>
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="attribute">
+        <Description>
+          The sailpoint.object.ManagedAttribute to modify during promotion.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+          The sailpoint.object.Application the managed attribute is from.
+        </Description>
+      </Argument>
+      <Argument name="state" type="Map">
+        <Description>
+          A Map that contains managed attribute promotion shared state during a task run.
+        </Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Source>String displayName = attribute.getDisplayableName();
+
+switch (displayName) {
+  case "approve" : 
+       String descEN = "Grants the ability to approve Time Cards.  Should be reserved for managers";
+       String descES = "Otorga la capacidad de aprobar tarjetas de tiempo. Debe reservarse para gerentes";
+       attribute.addDescription("en_US",descEN);
+       attribute.addDescription("es_ES",descES);
+       break;
+  case "input" :
+       String descEN = "Grants the ability to input Time Cards.  Should be applied to all workers";
+       attribute.addDescription("en_US",descEN);
+       break;
+  case "reject" :
+       String descEN = "Grants the ability to reject Time Cards.  Should be reserved for managers";
+       attribute.addDescription("en_US",descEN);
+       break;
+  case "super" :
+       String descEN = "&lt;B&gt;WARNING:&lt;/B&gt; This grants admin level privileges to the Time Tracking System.&lt;br&gt; This level of privileged access dhould be reserved for individuals in the Operation and IT departments.";
+       attribute.addDescription("en_US",descEN);
+       break;
+}</Source>
+</Rule>

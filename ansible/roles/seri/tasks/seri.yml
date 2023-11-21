@@ -1,0 +1,108 @@
+---
+- name: Include secret vars
+  include_vars:
+    file: secrets.yml
+
+- name: Generate hosts file
+  ansible.builtin.template:
+    src=hosts.j2
+    dest=/etc/hosts
+
+- name: Set motd
+  ansible.builtin.copy:
+    src: motd
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Copy setup files for SERI
+  ansible.builtin.copy:
+    src: seri
+    dest: "{{ web_inf_dir }}/config/"
+    owner: tomcat
+    group: tomcat
+    mode: 664
+    directory_mode: 774
+
+
+- name: Copy seri init file
+  ansible.builtin.copy: 
+    src: init-seri.xml
+    dest: "{{ web_inf_dir }}/config/"
+    owner: tomcat
+    group: tomcat
+    mode: '0644'
+
+- name: Copy iiq setup script
+  ansible.builtin.copy: 
+    src: iiq-setup
+    dest: "{{ web_inf_dir }}/config/"
+    owner: tomcat
+    group: tomcat
+    mode: '0644'
+
+- name: Import SERI setup
+  ansible.builtin.shell:
+    chdir: "{{ web_inf_dir }}/bin/"
+    cmd: "{{ java_cmd }} console iiqBeans -c \"import init-seri.xml\""
+    stdin: |
+      {{ iiq_admin_user }}
+      {{ iiq_admin_password }}
+  async: 1200
+  poll: 5
+  register: cmdout
+  changed_when: cmdout.rc != 0
+
+- name: Update Identity hibernate file
+  blockinfile:
+    path: "{{ web_inf_dir }}/classes/sailpoint/object/IdentityExtended.hbm.xml"
+    marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    block: "{{ lookup('file', 'hibernate/IdentityExtended.hbm.xml') }}"
+
+- name: Update Bundle hibernate file
+  blockinfile:
+    path: "{{ web_inf_dir }}/classes/sailpoint/object/BundleExtended.hbm.xml"
+    marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    block: "{{ lookup('file', 'hibernate/BundleExtended.hbm.xml') }}"
+
+- name: Update CertificationItem hibernate file
+  blockinfile:
+    path: "{{ web_inf_dir }}/classes/sailpoint/object/CertificationItemExtended.hbm.xml"
+    marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    block: "{{ lookup('file', 'hibernate/CertificationItemExtended.hbm.xml') }}"
+
+- name: Update Link hibernate file
+  blockinfile:
+    path: "{{ web_inf_dir }}/classes/sailpoint/object/LinkExtended.hbm.xml"
+    marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    block: "{{ lookup('file', 'hibernate/LinkExtended.hbm.xml') }}"
+
+- name: Stop app server
+  ansible.builtin.service:
+    name: "tomcat"
+    state: stopped
+
+- name: Make schema additions
+  ansible.builtin.shell: 
+    cmd: "./iiq extendedSchema"
+    chdir: "{{ web_inf_dir }}/bin"
+    stdin: |
+      {{ iiq_admin_user }}
+      {{ iiq_admin_password }}
+  async: 1200
+  poll: 5
+  register: out
+  changed_when: out.rc != 0
+
+- name: Extend database schema
+  mysql_db:
+    name: identityiq
+    state: import
+    force: true
+    target: "{{ web_inf_dir }}/database/add_identityiq_extensions.mysql"
+
+- name: restart tomcat
+  ansible.builtin.service:
+    name: "tomcat"
+    state: started

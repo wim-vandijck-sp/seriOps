@@ -1,0 +1,46 @@
+---
+- name: Include secret vars
+  include_vars:
+    file: secrets.yml
+    
+- name: Copy TRAKK-WS Resource files over
+  ansible.builtin.copy: 
+    src: Trakk-WS
+    dest: "{{ web_inf_dir }}/config/"
+    owner: tomcat
+    group: tomcat
+    mode: '0644'
+    directory_mode: 774
+
+- name: Run TRAKK-WS setup task
+  ansible.builtin.shell: 
+    cmd: "{{ java_cmd }} console iiqBeans -c \"import setup.xml\""
+    chdir: "{{ web_inf_dir }}/config/Trakk-WS/"
+    stdin: |
+      {{ iiq_admin_user }}
+      {{ iiq_admin_password }}
+  async: 1200
+  poll: 5
+  register: cmdout
+  changed_when: cmdout.rc != 0
+
+- name: Create TRAKK-WS database
+  community.mysql.mysql_db:
+    name: trakkws
+    login_user: root
+    login_password: "{{ mysql_root_passwd }}"
+    state: import
+    target: "{{ web_inf_dir }}/config/Trakk-WS/trakk-ws.ddl"
+
+- name: Make trakkws app dir
+  ansible.builtin.file:
+    path: "{{ tomcat_root }}/trakkws"
+    owner: tomcat
+    group: tomcat
+    state: directory
+    mode: '0774'
+
+- name: Deploy TRAKK-WS Web app
+  ansible.builtin.unarchive: 
+    src: "Trakk-WS/trakkws-0.0.1-SNAPSHOT.war"
+    dest: "{{ tomcat_root }}/trakkws"

@@ -15,6 +15,17 @@ jndiDataSource.jndiName=java:comp/env/jdbc/testDataSource
 # leave the default value "dataSource".
 configuredDataSource.targetBeanName=dataSource
 
+# These settings are for the activemq broker.  At this time this should remain
+# set to type activemq. This is only needed for running an embedded message
+# broker within IdentityIQ, and is ignored when the message broker is external
+messageServiceFactory.type=activemq
+activeMQMessageServiceManager.brokerUri=tcp://0.0.0.0:61616?transport.trace=true&transport.soTimeout=10000
+activeMQMessageServiceManager.activemqLocker=org.apache.activemq.store.jdbc.LeaseDatabaseLocker
+# ActiveMQ Broker System Usage limit sizing in Megabytes
+activeMQMessageServiceManager.memoryLimit=1024
+activeMQMessageServiceManager.storeLimit=100000
+activeMQMessageServiceManager.tempLimit=50000
+
 ##### Data Source Properties #####
 dataSource.maxWaitMillis=10000
 dataSource.maxTotal=50
@@ -32,6 +43,7 @@ dataSource.password=1:iCAlakm5CVUe7+Q6hVJIBA==
 dataSource.url=jdbc:mysql://localhost/identityiq?useServerPrepStmts=true&tinyInt1isBit=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
 dataSource.driverClassName=com.mysql.cj.jdbc.Driver
 sessionFactory.hibernateProperties.hibernate.dialect=org.hibernate.dialect.MySQL57Dialect
+activeMQMessageServiceManager.activemqJdbcAdapter=org.apache.activemq.store.jdbc.adapter.MySqlJDBCAdapter
 
 ##### Plugins ####
 
@@ -76,6 +88,22 @@ pluginsDataSource.password=1:8ORggiEVfa289a0+YccD4QQO0Eec3V9eSHaQwFHsNR4=
 pluginsDataSource.url=jdbc:mysql://localhost/identityiqPlugin?useServerPrepStmts=true&tinyInt1isBit=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
 pluginsDataSource.driverClassName=com.mysql.cj.jdbc.Driver
 
+##### Access History ####
+
+##### Data Source Properties for Access History #####
+dataSourceAccessHistory.maxWaitMillis=10000
+dataSourceAccessHistory.maxTotal=50
+dataSourceAccessHistory.minIdle=5
+#dataSourceAccessHistory.minEvictableIdleTimeMillis=300000
+#dataSourceAccessHistory.maxOpenPreparedStatements=-1
+
+dataSourceAccessHistory.username=identityiqah
+dataSourceAccessHistory.password=1:ACP:1zLz2jWFgxin6IMcEIX7YG/Osi8odwceLRDqEPZ3VyA=
+
+##### MySQL/Aurora (without SSL)  #####
+dataSourceAccessHistory.url=jdbc:mysql://localhost/identityiqah?useServerPrepStmts=true&tinyInt1isBit=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
+dataSourceAccessHistory.driverClassName=com.mysql.cj.jdbc.Driver
+sessionFactoryAccessHistory.hibernateProperties.hibernate.dialect=org.hibernate.dialect.MySQL57Dialect
 #
 # Settings for the ruleRunner and its pool
 #
@@ -97,6 +125,16 @@ hibernateListenerServiceConfig.maxThreads=20
 hibernateListenerServiceConfig.keepAliveTime=10000
 # how many changes can be queued up for the threads to work on
 hibernateListenerServiceConfig.queueSize=10000
+
+##### BundleProfileRelation Listener Service Thread Pool Settings ######
+# number of threads that will always be alive
+bundleProfileRelationListenerServiceConfig.coreThreads=10
+# max number of threads that can be running if there is a high load
+bundleProfileRelationListenerServiceConfig.maxThreads=20
+# how long in milliseconds extra threads will sit idle before scaling back down to the core number
+bundleProfileRelationListenerServiceConfig.keepAliveTime=10000
+# how many changes can be queued up for the threads to work on
+bundleProfileRelationListenerServiceConfig.queueSize=10000
 
 ##### Debug Settings #####
 

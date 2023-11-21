@@ -1,0 +1,278 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Provision - PRISM" type="JDBCProvision">
+  <Description>A Provisioning rule for the PRISM application. Handles Account Creates/Deletes/Modifies/Unlocks/Enables/Disables</Description>
+  <Signature returnType="ProvisioningResult">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+                The application whose data file is being processed.
+                </Description>
+      </Argument>
+      <Argument name="schema">
+        <Description>
+                The Schema currently in use.
+                </Description>
+      </Argument>
+      <Argument name="connection">
+        <Description>
+                A connection object to connect to database.
+                </Description>
+      </Argument>
+      <Argument name="plan">
+        <Description>
+                The ProvisioningPlan created against the JDBC application.
+                </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="result">
+        <Description>
+                A Provisioning Result object is desirable to return the status.IT can be a new object or part of  Provisioning Plan
+                </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source> 
+import java.util.Date;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.sql.SQLException;
+import java.sql.ResultSet;
+import java.sql.Types;
+import java.util.List;
+import sailpoint.api.SailPointContext;
+import sailpoint.connector.JDBCConnector;
+import sailpoint.object.Application;
+import sailpoint.object.ProvisioningPlan;
+import sailpoint.object.ProvisioningPlan.AccountRequest;
+import sailpoint.object.ProvisioningPlan.AttributeRequest;
+import sailpoint.object.ProvisioningPlan.PermissionRequest;
+import sailpoint.object.ProvisioningResult;
+import sailpoint.object.Schema;
+import sailpoint.tools.xml.XMLObjectFactory;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.Log;
+import sailpoint.tools.Util;
+
+		//
+		// Internal method for grabbing an Attribute Request Value.
+		//
+		
+	   public Object getAttributeRequestValue(AccountRequest acctReq, String attribute) {
+	    	if ( acctReq != null ) {
+	    	  AttributeRequest attrReq = acctReq.getAttributeRequest(attribute);
+	    	  if ( attrReq != null ) {
+	    	    return attrReq.getValue();
+	    	  }
+	    	}
+	    	return null;
+	    }
+
+//
+// JDBC Provisioning Rule Body
+//
+// We will handle these cases right now: 
+// 
+// Account Request Create
+// Account Request Modify
+// Account Request Delete
+// Account Lock/Unlock
+// Account Enable/Disable
+//
+	
+Date now = new Date();
+
+//
+// The ProvisioningResult is the return object for this type of rule. We'll create it here and then populate it later
+//
+
+ProvisioningResult result = new ProvisioningResult();
+
+
+//
+// Check if the plan is null or not, if not null, process it... 
+//
+
+if ( plan != null ) {
+
+
+	List accounts = plan.getAccountRequests();
+	
+	// 
+	//  Get all Account Requests out of the plan
+	// 
+
+	if ( ( accounts != null ) &amp;&amp; ( accounts.size() > 0 ) ) {
+	
+		//
+		// If the plan contains one or more account requests, we'll iterate through them
+		//
+		
+		for ( AccountRequest account : accounts ) {
+			
+			try {
+			
+				// 
+				// All of the account operations will reside in a try block in case we have any errors, we can mark the provisioningresult as "Failed" if we have an issue.
+				//
+
+				if (AccountRequest.Operation.Create.equals(account.getOperation())) {
+
+					//
+					// CREATE Operation
+					// 				
+				
+					PreparedStatement statement = connection.prepareStatement("insert into users (login,first,last,status,locked) values (?,?,?,?,?)");
+					PreparedStatement statementUsers_Groups;
+					
+					statement.setString(1, (String) account.getNativeIdentity());
+					statement.setString(2, getAttributeRequestValue(account, "first"));
+					statement.setString(3, getAttributeRequestValue(account, "last"));
+					statement.setString(4, getAttributeRequestValue(account, "status"));
+					statement.setString(5, getAttributeRequestValue(account, "locked"));
+					 
+					statement.executeUpdate();
+					 
+					//
+					// Get all attribute requests and then we will filter for those related to the roles column
+					//
+					List mod_attr_requests = account.getAttributeRequests();
+							
+					if (mod_attr_requests != null) {
+						for (AttributeRequest req : mod_attr_requests ) {
+								if (req.getName().equals("groups")) {
+									if (ProvisioningPlan.Operation.Add.equals(req.getOperation())) {
+										if (req.getValue() instanceof String) {
+												   statementUsers_Groups = connection.prepareStatement("insert into users_groups (login,group_name) values (?,?)");
+												   statementUsers_Groups.setString(1, (String) account.getNativeIdentity());
+												   statementUsers_Groups.setString(2, req.getValue());
+												   statementUsers_Groups.executeUpdate();              
+												} 
+									}
+							   } 
+						}
+					}
+					
+					//
+					// Sucessful Create, so mark result as COMMITTED
+					//
+					
+					result.setStatus(ProvisioningResult.STATUS_COMMITTED);
+					
+
+				} else if (AccountRequest.Operation.Modify.equals(account.getOperation())) {
+				
+					//
+					// MODIFY Operation
+					// 
+								
+					//
+					// Get all attribute requests and then we will filter for those related to the roles column
+					//
+					PreparedStatement statement;
+					List mod_attr_requests = account.getAttributeRequests();
+							
+					if (mod_attr_requests != null) {
+						for (AttributeRequest req : mod_attr_requests ) {
+								if (req.getName().equals("groups")) {
+								   if (ProvisioningPlan.Operation.Remove.equals(req.getOperation())) {
+										// Process Removes First
+										if (req.getValue() instanceof String) {
+												statement = connection.prepareStatement("DELETE FROM users_groups WHERE group_name = ? and login = ?");
+												statement.setString(2, (String) account.getNativeIdentity());
+												statement.setString(1,req.getValue()); 
+												statement.executeUpdate();												  
+										}
+									} else if (ProvisioningPlan.Operation.Add.equals(req.getOperation())) {
+										// Process Adds Second
+										if (req.getValue() instanceof String) {
+												statement = connection.prepareStatement("insert into users_groups (login,group_name) values (?,?)");
+												statement.setString(1, (String) account.getNativeIdentity());
+												statement.setString(2,req.getValue()); 
+												statement.executeUpdate();	
+												} 
+									}
+							   } 
+						}
+					}
+
+					result.setStatus(ProvisioningResult.STATUS_COMMITTED);
+
+
+
+				} else if (AccountRequest.Operation.Delete.equals(account.getOperation())) {
+				
+					//
+					// DELETE Operation
+					// 
+
+
+					PreparedStatement statement = connection.prepareStatement("delete from users where login = ?");
+					PreparedStatement statementUsers_Groups = connection.prepareStatement("delete from users_groups where login = ?");
+					statement.setString(1, (String) account.getNativeIdentity());
+					statementUsers_Groups.setString(1, (String) account.getNativeIdentity());
+					statement.executeUpdate();
+					statementUsers_Groups.executeUpdate();
+
+					result.setStatus(ProvisioningResult.STATUS_COMMITTED);
+
+				} else if (AccountRequest.Operation.Disable.equals(account.getOperation())) {
+
+	PreparedStatement statement = connection.prepareStatement("update users set status = 'I' where login = ?");
+					statement.setString(1, (String) account.getNativeIdentity());
+					statement.executeUpdate();
+					result.setStatus(ProvisioningResult.STATUS_COMMITTED);
+
+				} else if (AccountRequest.Operation.Enable.equals(account.getOperation())) {
+
+	PreparedStatement statement = connection.prepareStatement("update users set status = 'A' where login = ?");
+					statement.setString(1, (String) account.getNativeIdentity());
+					statement.executeUpdate();
+					result.setStatus(ProvisioningResult.STATUS_COMMITTED);
+
+
+				} else if (AccountRequest.Operation.Lock.equals(account.getOperation())) {
+
+	PreparedStatement statement = connection.prepareStatement("update users set locked = 'Y' where login = ?");
+					statement.setString(1, (String) account.getNativeIdentity());
+					statement.executeUpdate();
+					result.setStatus(ProvisioningResult.STATUS_COMMITTED);
+
+
+				} else if (AccountRequest.Operation.Unlock.equals(account.getOperation())) {
+
+	PreparedStatement statement = connection.prepareStatement("update users set locked = 'N' where login = ?");
+					statement.setString(1, (String) account.getNativeIdentity());
+					statement.executeUpdate();
+					result.setStatus(ProvisioningResult.STATUS_COMMITTED);
+
+				} else {
+
+					// Unknown operation!
+				}
+
+			} catch (SQLException e) {
+                        result.setStatus(ProvisioningResult.STATUS_FAILED);
+                        result.addError(e);
+			} 
+		}    // account request loop
+	}     // if account requests exist
+}   // if plan not null
+
+		
+return result;
+</Source>
+</Rule>

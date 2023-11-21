@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule   language="beanshell" name="lastLoginToDate" type="LinkAttribute">
+  <Source><![CDATA[
+import sailpoint.object.Identity;
+import sailpoint.tools.Util;
+
+String acctValue = link.getAttribute("acct_lastLogin");
+
+if (acctValue == null || acctValue.isEmpty())
+  return null;
+else
+  // format of date may contain a time such as: ERP is 2/27/2008  9:42:51 PM
+  if (acctValue.contains(" ")) 
+			acctValue = acctValue.substring(0, acctValue.indexOf(' '));
+  return Util.stringToDate(acctValue);
+
+]]></Source>
+</Rule>

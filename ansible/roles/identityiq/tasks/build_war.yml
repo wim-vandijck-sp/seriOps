@@ -69,7 +69,6 @@
     owner: sailpoint
     group: sailpoint
     mode: '0644'
-    remote_src: yes
 
 - name: Copy build.properties file (hostname)
   ansible.builtin.template: 
@@ -78,7 +77,6 @@
     owner: sailpoint
     group: sailpoint
     mode: '0644'
-    remote_src: yes
 
 - name: Copy target.properties file
   ansible.builtin.template:
@@ -95,17 +93,6 @@
     owner: sailpoint
     group: sailpoint
     mode: '0644'
-
-- name: Copy hibernation files for SERI
-  ansible.builtin.copy:
-    src: "{{ item }}"
-    dest: "{{ git_dest }}/web/WEB-INF/classes/sailpoint/object/"
-    owner: sailpoint
-    group: sailpoint
-    mode: 664
-  with_fileglob:
-    - hibernate/*
-  when: serify == "yes"
 
 - name: ensure build.sh is executable
   ansible.builtin.file: 

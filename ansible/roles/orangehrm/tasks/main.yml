@@ -45,7 +45,7 @@
 
 - name: Ensure php mysql driver is installed
   ansible.builtin.package: 
-    name: php7.4-mysql
+    name: php-mysql
     state: present
 
 - name: Run installer

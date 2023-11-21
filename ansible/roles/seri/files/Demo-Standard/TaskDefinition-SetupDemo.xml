@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition name="Setup Demo" resultAction="Delete" subType="task_item_type_generic" type="Generic">
+  <Attributes>
+    <Map>
+      <entry key="TaskSchedule.host"/>
+      <entry key="exitOnError" value="false"/>
+      <entry key="taskCompletionEmailNotify" value="Disabled"/>
+      <entry key="taskCompletionEmailRecipients"/>
+      <entry key="taskCompletionEmailTemplate"/>
+      <entry key="taskList" value="Load the Plugin Deployer,Aggregate HR Authoritative, Aggregate AD Accounts, Aggregate Enterprise Directory Accounts, Aggregate Oracle EBS Accounts, Aggregate Mainframe Accounts, Aggregate ERP Portal Accounts, Aggregate PRISM, Aggregate TRAKK, Aggregate TRAKK-WS, Aggregate AD Groups, Aggregate Enterprise Directory Groups, Aggregate PRISM Groups, Aggregate Oracle EBS Roles and Responsibilities, Aggregate Mainframe Groups, Aggregate Windows FileServer Access, Aggregate TRAKK-WS Groups, Import Demo User Responses, Import Demo Roles, Task - Import SOD Policies, FAM Classification Task, Identity Refresh - Remove Joiner Event, Configure RapidSetup Users, Task - Setup Bots, Setup PAM, Refresh Entitlement Connections, Refresh Groups, Detect Policy Violations, SERI - Demo Certification Setup, SERI - Demo Trending Setup, Refresh Monitored Users Risk Scores, Create Dropdown Rules, SERI - Demo Request Setup, SERI - Demo Dashboard Setup, SERI - Demo Certification Signoff Setup, Refresh Application Scores, KPI Plugin - Run all tasks, Task - Enable RapidSetup Joiner, Task - Dynamic Approval Setup, Initial Refresh for Demo Users, Perform Maintenance"/>
+      <entry key="trace" value="true"/>
+    </Map>
+  </Attributes>
+  <Description>Run the tasks needed to setup the SERI standard demo</Description>
+  <Parent>
+    <Reference class="sailpoint.object.TaskDefinition" name="Sequential Task Launcher"/>
+  </Parent>
+</TaskDefinition>

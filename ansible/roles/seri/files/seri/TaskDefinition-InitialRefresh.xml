@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition name="Initial Refresh for Demo Users" resultAction="Delete" subType="task_item_type_identity" type="Identity">
+  <Attributes>
+    <Map>
+      <entry key="excludeInactive" value="true"/>
+      <entry key="filter" value="department == &quot;Accounting&quot;"/>
+      <entry key="processTriggers" value="true"/>
+    </Map>
+  </Attributes>
+  <Description>Identity Refresh used for setting up Accounting Demo users.</Description>
+  <Parent>
+    <Reference class="sailpoint.object.TaskDefinition"  name="Identity Refresh"/>
+  </Parent>
+</TaskDefinition>

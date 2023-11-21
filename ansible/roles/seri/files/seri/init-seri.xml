@@ -3,6 +3,7 @@
 <sailpoint>
   <!-- Pull in Idenitty Object Config  -->
   <ImportAction name="include" value="ObjectConfig-Identity-Base-SERI.xml"/>
+  <ImportAction name="include" value="TaskDefinition-InitialRefresh.xml"/>
 
 
   <!-- 
