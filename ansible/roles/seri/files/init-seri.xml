@@ -7,6 +7,8 @@
   <ImportAction name="include" value="seri/ObjectConfig-Identity-Base-SERI.xml"/>
   <ImportAction name="include" value="seri/ObjectConfig-Identity.xml"/>
   <ImportAction name="include" value="seri/UIConfig-SERI.xml"/>
+  <ImportAction name="include" value="seri/TaskDefinition-InitialRefresh.xml"/>
+
   <!-- 
   <ImportAction name='include' value='HR/setup.xml'/>
   <ImportAction name='include' value='EnterpriseDirectory/setup.xml'/>
