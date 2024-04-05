@@ -23,18 +23,12 @@
   <ImportAction name='include' value='seri/catalog/CoreDemo/Utility-SODImporter/setup.xml'/>
   <ImportAction name='include' value='seri/catalog/CoreDemo/Utility-ChallengeAnswerImporter/setup.xml'/>
   <ImportAction name='include' value='seri/catalog/CoreDemo/Utility-RoleImporter/setup.xml'/>
-  <!-- AR 2021.04.06 added to support loading the PluginDeployer if not deployed by the ant task -->
+  <! - AR 2021.04.06 added to support loading the PluginDeployer if not deployed by the ant task - ->
   <ImportAction name='include' value='seri/catalog/CoreDemo/Utility-PluginLoader/setup.xml'/>
   
   <ImportAction name='include' value='seri/catalog/CoreDemo/Connector-SOAP/setup.xml'/>
   <ImportAction name='include' value='seri/catalog/CoreDemo/Resource-ERPPortal/setup.xml'/>
   <ImportAction name='include' value='seri/catalog/CoreDemo/Demo-Standard/setup.xml'/>
   <ImportAction name='include' value='seri/catalog/CoreDemo/Resource-RapidSetup/setup.xml'/>
-   
-
-  
-  <!--  Configure IAI to Use the MockRecommender  -->
-  <ImportAction name="include" value="seri/xml/Configuration/Configuration-Identityaiconfiguration.xml"/>
-  <ImportAction name="include" value="seri/xml/Configuration/Configuration-IAI-MockRecommenderSetup.xml"/>
   -->
 </sailpoint>

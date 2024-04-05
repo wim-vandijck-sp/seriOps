@@ -143,6 +143,14 @@
   when: 
     - identityiq_patch_version is defined
 
+- name: Enable debug page link
+  ansible.builtin.lineinfile:
+    dest: "{{ tomcat_root }}/bin/setenv.sh"
+    line: "\"JAVA_OPTS=-Dsailpoint.debugPages=true ${JAVA_OPTS}\""
+    regex: "debugPages"
+    state: present
+    insertafter: EOF
+
 - name: Patch IIQ
   command: "{{ java_cmd }} patch {{ identityiq_version }}{{ identityiq_patch_version }}"
   when:

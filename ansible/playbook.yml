@@ -21,7 +21,7 @@
     - role: robertdebock.tomcat
       vars:
         tomcat_version: 9
-        tomcat_version9: 9.0.83
+        tomcat_version9: 9.0.87
         tomcat_xms: 1024M
         tomcat_xmx: 4092M
     - role: robertdebock.mysql

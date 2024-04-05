@@ -50,6 +50,8 @@
 
 - name: Run installer
   ansible.builtin.shell: "php {{ orangehrm_directory }}/orangehrm/installer/cli_install.php 0"
+  register: result
+  failed_when: result.rc == 0 and result.rc == 255
   args:
     chdir: "{{ orangehrm_directory }}/orangehrm/installer"
 
