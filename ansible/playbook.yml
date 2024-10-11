@@ -13,7 +13,7 @@
     - role: robertdebock.hostname
       vars:
         hostname: seri.sailpointdemo.com
-        hostname_reboot: no
+        hostname_reboot: false
     - role: robertdebock.update
       vars:
         update_reboot: no
