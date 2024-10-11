@@ -35,8 +35,6 @@
             password: identityiq
             priv: "identityiq.*:ALL"
     - role: identityiq
-      vars:
-        include_group_management: "no"
     - role: 389-ds
       tags: ldap
     - role: robertdebock.php
