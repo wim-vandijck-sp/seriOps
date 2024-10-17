@@ -1,0 +1,10 @@
+---
+- name: Include github encrypted variables.
+  ansible.builtin.include_vars: "secrets.yml"
+
+- name: Checkout repo
+  ansible.builtin.git:
+    repo: "https://{{ git_user }}:{{ git_pat }}@{{ repo_url }}"
+    dest: "{{ identityiq_git_dest }}"
+    version: main
+    force: true

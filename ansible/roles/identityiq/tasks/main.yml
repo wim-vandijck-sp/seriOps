@@ -4,9 +4,8 @@
 
 - name: "Install IIQ"
   ansible.builtin.include_tasks: install.yml
+  when: identityiq_import_custom is false
 
-- name: "Install group management extension"
-  ansible.builtin.include_tasks: groupmanagement.yml
-  when: 
-    - include_group_management is defined
-    - include_group_management == "yes"
+- name: "Install IIQ With Custom artefacts import"
+  ansible.builtin.include_tasks: importcustom.yml
+  when: identityiq_import_custom is true

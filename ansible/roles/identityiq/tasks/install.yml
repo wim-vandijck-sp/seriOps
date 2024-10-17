@@ -1,6 +1,6 @@
 ---
 - name: Include secret vars
-  include_vars:
+  ansible.builtin.include_vars:
     file: secrets.yml
 
 - name: Stop app server
@@ -9,95 +9,95 @@
     state: stopped
 
 - name: Remove identityiq application folder
-  file:
+  ansible.builtin.file:
     path: "{{ identityiq_root }}"
     state: absent
 
 - name: Create identityiq application folder
-  file:
+  ansible.builtin.file:
     path: "{{ identityiq_root }}"
     owner: tomcat
     group: tomcat
     state: directory
-    mode: '0774'
-      
+    mode: "0774"
+
 - name: Create folder to extract identityiq.zip
-  file: 
-    path: "{{ home_location }}/identityiq/"
+  ansible.builtin.file:
+    path: "{{ identityiq_home_location }}/identityiq/"
     state: directory
     owner: sailpoint
     group: sailpoint
-    mode: '0774'
+    mode: "0774"
 
 - name: Copy identityiq.zip file
   ansible.builtin.copy:
     src: "identityiq-{{ identityiq_version }}.zip"
-    dest: "{{ home_location }}"
+    dest: "{{ identityiq_home_location }}"
     owner: sailpoint
     group: sailpoint
-    mode: '0644'
+    mode: "0644"
     force: false
 
 - name: Copy patch file
   ansible.builtin.copy:
     src: "identityiq-{{ identityiq_version }}{{ identityiq_patch_version }}.jar"
-    dest: "{{ home_location }}"
+    dest: "{{ identityiq_home_location }}"
     owner: sailpoint
     group: sailpoint
-    mode: '0644'
+    mode: "0644"
   when: identityiq_patch_version is defined
 
 - name: Extract installer file
-  unarchive: 
-    src: "{{ home_location }}/identityiq-{{ identityiq_version }}.zip"
-    remote_src: yes
-    dest: "{{ home_location }}/identityiq"
+  ansible.builtin.unarchive:
+    src: "{{ identityiq_home_location }}/identityiq-{{ identityiq_version }}.zip"
+    remote_src: true
+    dest: "{{ identityiq_home_location }}/identityiq"
 
 - name: Deploy war file
-  unarchive: 
-    src: "{{ home_location }}/identityiq/identityiq.war"
-    remote_src: yes
+  ansible.builtin.unarchive:
+    src: "{{ identityiq_home_location }}/identityiq/identityiq.war"
+    remote_src: true
     dest: "{{ identityiq_root }}"
 
 - name: Drop existing database
-  mysql_db:
-    name: 
-    - identityiq
-    - identityiqah
+  community.mysql.mysql_db:
+    name:
+      - identityiq
+      - identityiqah
     state: absent
 
 - name: Create identityiq database
-  mysql_db:
+  community.mysql.mysql_db:
     name: identityiq
     state: present
 
 - name: Fix create user statement for MariaDB
-  replace:
+  ansible.builtin.replace:
     path: "{{ identityiq_root }}/WEB-INF/database/create_identityiq_tables-{{ identityiq_version }}.mysql"
-    regexp: 'WITH mysql_native_password '
-    replace: ''
+    regexp: "WITH mysql_native_password "
+    replace: ""
 
 - name: Create identityiq schema
-  mysql_db:
+  community.mysql.mysql_db:
     name: all
     state: import
     target: "{{ identityiq_root }}/WEB-INF/database/create_identityiq_tables-{{ identityiq_version }}.mysql"
 
 - name: Copy log4j2.properties file
-  template:
+  ansible.builtin.template:
     src: "log4j2.properties.j2"
     dest: "{{ identityiq_root }}/WEB-INF/classes/log4j2.properties"
-    mode: '0644'
+    mode: "0644"
 
 - name: Copy iiq.properties file
-  template:
+  ansible.builtin.template:
     src: "iiq.properties.j2"
     dest: "{{ identityiq_root }}/WEB-INF/classes/iiq.properties"
-    mode: '0644'
+    mode: "0644"
   notify: restart tomcat
 
 - name: Make iiq script executable
-  file:
+  ansible.builtin.file:
     dest: "{{ identityiq_root }}/WEB-INF/bin/iiq"
     mode: u+x
 
@@ -106,53 +106,54 @@
     seconds: 5
 
 - name: Import init.xml
-  command: "{{ java_cmd }} console iiqBeans -c \"import init.xml\""
+  ansible.builtin.command: '{{ identityiq_java_cmd }} console iiqBeans -c "import init.xml"'
   args:
     stdin: |
-      {{ iiq_admin_user }}
-      {{ iiq_admin_password }}
+      {{ identityiq_admin_user }}
+      {{ identityiq_admin_password }}
   async: 1200
   poll: 5
   register: cmdout
   changed_when: cmdout.rc != 0
 
 - name: Import init-lcm.xml
-  command: "{{ java_cmd }} console iiqBeans -c \"import init-lcm.xml\""
+  ansible.builtin.command: '{{ identityiq_java_cmd }} console iiqBeans -c "import init-lcm.xml"'
   args:
     stdin: |
-      {{ iiq_admin_user }}
-      {{ iiq_admin_password }}
+      {{ identityiq_admin_user }}
+      {{ identityiq_admin_password }}
   async: 1200
   poll: 5
   register: cmdout
   changed_when: cmdout.rc != 0
 
 - name: Patch identityiq web
-  unarchive:
-    src: "{{ home_location }}/identityiq-{{ identityiq_version }}{{ identityiq_patch_version }}.jar"
+  ansible.builtin.unarchive:
+    src: "{{ identityiq_home_location }}/identityiq-{{ identityiq_version }}{{ identityiq_patch_version }}.jar"
     remote_src: true
     dest: "{{ identityiq_root }}/"
-  when: 
+  when:
     - identityiq_patch_version is defined
 
 - name: Patch identityiq database
-  mysql_db:
-    name: identityiq
+  community.mysql.mysql_db:
+    name: all
     state: import
+    force: true
     target: "{{ identityiq_root }}/WEB-INF/database/upgrade_identityiq_tables-{{ identityiq_version }}{{ identityiq_patch_version }}.mysql"
-  when: 
+  when:
     - identityiq_patch_version is defined
 
 - name: Enable debug page link
   ansible.builtin.lineinfile:
     dest: "{{ tomcat_root }}/bin/setenv.sh"
-    line: "JAVA_OPTS=\"-Dsailpoint.debugPages=true ${JAVA_OPTS}\""
+    line: 'JAVA_OPTS="-Dsailpoint.debugPages=true ${JAVA_OPTS}"'
     regex: "debugPages"
     state: present
     insertafter: EOF
 
 - name: Patch IIQ
-  command: "{{ java_cmd }} patch {{ identityiq_version }}{{ identityiq_patch_version }}"
+  ansible.builtin.command: "{{ identityiq_java_cmd }} patch {{ identityiq_version }}{{ identityiq_patch_version }}"
   when:
     - identityiq_patch_version is defined
   async: 1200
@@ -165,6 +166,6 @@
   ansible.builtin.file:
     path: /opt/tomcat
     state: directory
-    recurse: yes
+    recurse: true
     owner: tomcat
     group: tomcat
